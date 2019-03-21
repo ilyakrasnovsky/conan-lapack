@@ -14,7 +14,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from conans.errors import ConanInvalidConfiguration
+from conans.errors import ConanException
 
 
 class LapackConan(ConanFile):
@@ -26,7 +26,7 @@ class LapackConan(ConanFile):
     url = "https://github.com/conan-community/conan-lapack"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False], "visual_studio": [True, False]}
-    default_options = {"shared": False, "visual_studio": False, "fPIC": True}
+    default_options = "shared=True","visual_studio=True", "fPIC=True"
     exports = "LICENSE"
     exports_sources = "CMakeLists.txt"
     generators = "cmake"
@@ -39,11 +39,11 @@ class LapackConan(ConanFile):
         if self.settings.os == "Macos" and \
             self.settings.compiler == "apple-clang" and \
             Version(self.settings.compiler.version.value) < "8.0":
-            raise ConanInvalidConfiguration("lapack requires apple-clang >=8.0")
+            raise ConanException("lapack requires apple-clang >=8.0")
         if self.options.visual_studio and not self.options.shared:
-            raise ConanInvalidConfiguration("only shared builds are supported for Visual Studio")
+            raise ConanException("only shared builds are supported for Visual Studio")
         if self.settings.compiler == "Visual Studio" and not self.options.visual_studio:
-            raise ConanInvalidConfiguration("This library needs option 'visual_studio=True' to be consumed")
+            raise ConanException("This library needs option 'visual_studio=True' to be consumed")
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -90,7 +90,7 @@ class LapackConan(ConanFile):
 
     def build(self):
         if self.settings.compiler == "Visual Studio":
-            raise ConanInvalidConfiguration("This library cannot be built with Visual Studio. Please use MinGW to "
+            raise ConanException("This library cannot be built with Visual Studio. Please use MinGW to "
                             "build it and option 'visual_studio=True' to build and consume.")
         cmake = self._configure_cmake()
         for target in ["blas", "cblas", "lapack", "lapacke"]:
